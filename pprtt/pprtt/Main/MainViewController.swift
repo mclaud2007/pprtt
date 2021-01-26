@@ -47,9 +47,11 @@ private extension MainViewController {
     }
     
     func configureVeiwModel() {
-        viewModel?.onDataLoaded = { [weak self] in
-            guard let collectionView = self?.mainVeiw?.collectionView else { return }
-            collectionView.reloadData()
+        viewModel?.onDataLoaded = {
+            DispatchQueue.main.async { [weak self] in
+                guard let collectionView = self?.mainVeiw?.collectionView else { return }
+                collectionView.reloadData()
+            }
         }
         
         viewModel?.setup(with: .simple)
@@ -113,6 +115,10 @@ extension MainViewController: UICollectionViewDelegate {
 // MARK: - UICollectionViewDataSource
 extension MainViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        2
+    }
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
         viewModel?.totalOnPage ?? 0
     }
     
@@ -120,8 +126,7 @@ extension MainViewController: UICollectionViewDataSource {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseID, for: indexPath) as? MainCollectionViewCell ?? MainCollectionViewCell()
         
         if let element = viewModel?.number(by: indexPath) {
-            cell.configure(with: element)
-            
+            cell.configure(with: element, and: indexPath)
         }
         
         return cell

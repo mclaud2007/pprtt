@@ -29,37 +29,23 @@ final class MainViewModel: MainViewModelProtocol {
     var numbers: [StructNumber] = []
     var onDataLoaded: (() -> Void)?
     var currentType: NumberType = .simple
-    
     var numberLimit: Int = 100
-    let numberArrayLimit: Int = 200
     
     var currentPage: Int = 0
     var currentOffset: Int {
-        switch currentType {
-        case .fibonachi:
-            return currentPage * numberLimit
-        default:
-            return numbers.count
-        }
-        
+        currentPage * numberLimit
     }
     var totalOnPage: Int {
-        return numbers.count
+        numbers.count / 2
     }
     
     private let service = NumberService()
     
     func setup(with type: NumberType) {
         currentPage = 0
-        numbers.removeAll()
-        
         currentType = type
-        switch type {
-        case .simple:
-            self.simple(start: 0)
-        case .fibonachi:
-            self.fibonachi(start: 0)
-        }
+        numbers.removeAll()
+        self.fetch(start: 0)
     }
     
     func fetch(start: Int) {
@@ -72,24 +58,30 @@ final class MainViewModel: MainViewModelProtocol {
     }
     
     func simple(start: Int) {
-        let newSimple = service.simple(start: start, limit: numberLimit)
-        numbers.append(contentsOf: newSimple)
-        currentPage += 1
-        self.onDataLoaded?()
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
+            let newSimple = self.service.simple(start: start, limit: self.numberLimit)
+            self.numbers.append(contentsOf: newSimple)
+            self.currentPage += 1
+            self.onDataLoaded?()
+        }
     }
     
     func fibonachi(start: Int) {
-        let newFibonacci = service.fibonacci(start: start, limit: numberLimit)
-        numbers.append(contentsOf: newFibonacci)
-        currentPage += 1
-        self.onDataLoaded?()
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
+            let newFibonacci = self.service.fibonacci(start: start, limit: self.numberLimit)
+            self.numbers.append(contentsOf: newFibonacci)
+            self.currentPage += 1
+            self.onDataLoaded?()
+        }
     }
     
     func number(by indexPath: IndexPath) -> StructNumber? {
-        guard numbers.indices.contains(indexPath.item) else {
+        let itemIndex = (indexPath.section * 2) + indexPath.item
+        guard numbers.indices.contains(itemIndex) else {
             return nil
         }
-        
-        return numbers[indexPath.item]
+        return numbers[itemIndex]
     }
 }

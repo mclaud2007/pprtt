@@ -32,8 +32,10 @@ class MainCollectionViewCell: UICollectionViewCell {
         backgroundColor = Constants.normalColor
     }
     
-    func configure(with number: StructNumber) {
-        backgroundColor = number.isOdd ? Constants.oddColor : Constants.normalColor
+    func configure(with number: StructNumber, and indexPath: IndexPath) {
+        let isOdd = indexPath.item % 2 == 0
+        let isSectionOdd = indexPath.section % 2 == 0 ? !isOdd : isOdd
+        backgroundColor = isSectionOdd ? Constants.oddColor : Constants.normalColor
         numberLabel.text = String(number.value)
     }
 }
